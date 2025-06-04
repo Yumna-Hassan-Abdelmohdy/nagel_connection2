@@ -53,7 +53,7 @@ pip-wheel-metadata/
 
 # 🧠 Checkpoints وأوزان النماذج
 *.pt
-*.pth
+#*.pth
 checkpoints/
 
 # 📄 تحريرات VS Code
