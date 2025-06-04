@@ -1,0 +1,66 @@
+# ⛔ تجاهل ملف الموديل
+Nagel2_Resnet2_acc=96,2.pth
+
+# 🐍 Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 📦 بيئة العمل الافتراضية
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# 🔐 ملفات البيئة الحساسة
+.env
+*.env
+
+# 📁 ملفات Logs
+*.log
+
+# 🧪 تغطية الاختبارات
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.cache
+nosetests.xml
+coverage/
+
+# 📦 حزم ومخرجات
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+sdist/  
+wheels/
+*.whl
+pip-wheel-metadata/
+
+# 🐳 Docker
+*.tar
+*.img
+*.dockerfile
+
+# 💥 PyInstaller
+*.spec
+
+# 🧠 Checkpoints وأوزان النماذج
+*.pt
+*.pth
+checkpoints/
+
+# 📄 تحريرات VS Code
+.vscode/
+
+# 💻 أنظمة التشغيل
+.DS_Store
+Thumbs.db
+desktop.ini
+

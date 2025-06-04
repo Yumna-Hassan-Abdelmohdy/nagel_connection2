@@ -1,0 +1,5 @@
+flask
+torch==2.2.0
+timm
+pillow
+requests
