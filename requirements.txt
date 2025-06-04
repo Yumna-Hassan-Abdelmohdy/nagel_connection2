@@ -1,5 +1,7 @@
-flask
-torch==2.2.0
+fastapi
+uvicorn
+torch
+torchvision
 timm
 pillow
-requests
+python-multipart
