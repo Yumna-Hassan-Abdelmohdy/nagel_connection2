@@ -1,5 +1,5 @@
 # ⛔ تجاهل ملف الموديل
-Nagel2_Resnet2_acc=96,2.pth
+# Nagel2_Resnet2_acc=96,2.pth
 
 # 🐍 Python cache
 __pycache__/
@@ -54,7 +54,6 @@ pip-wheel-metadata/
 # 🧠 Checkpoints وأوزان النماذج
 *.pt
 #*.pth
-checkpoints/
 
 # 📄 تحريرات VS Code
 .vscode/
@@ -63,4 +62,3 @@ checkpoints/
 .DS_Store
 Thumbs.db
 desktop.ini
-
