@@ -1,47 +1,38 @@
-from flask import Flask, request, jsonify
+import os
+from fastapi import FastAPI, File, UploadFile, HTTPException
 import torch
 import timm
 from torchvision import transforms
 from PIL import Image
 import io
-import os
-import requests
 
-app = Flask(__name__)
+app = FastAPI()
 
-# إعدادات النموذج
-model_path = "Nagel_model.pth"
-model_url = "https://drive.google.com/uc?export=download&id=10rpMMep8aYMXI8HE3lUvJucNrWQ7xXkl" # عدّل الرابط هنا
-num_classes = 10
+# ✅ قراءة المتغيرات البيئية
+model_path = os.getenv("MODEL_PATH", "Nagel2_Resnet2_acc=96,2.pth")
+image_size = int(os.getenv("IMAGE_SIZE", 192))
+num_classes = int(os.getenv("NUM_CLASSES", 10))
+
 class_names = [
     'Acral Lentiginous Melanoma', 'Beaus Line', 'Blue Finger', 'Clubbing',
     'Error-Not Nail', 'Healthy Nail', 'Koilonychia', 'Muehrckes Lines',
     'Pitting', 'Terrys Nail'
 ]
 
-# تحميل الموديل من الإنترنت لو مش موجود
-if not os.path.exists(model_path):
-    print("📥 Downloading model weights...")
-    r = requests.get(model_url)
-    with open(model_path, 'wb') as f:
-        f.write(r.content)
-    print("✅ Model downloaded.")
-
-# تحميل الموديل
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = timm.create_model("resnet18d", pretrained=False, num_classes=num_classes)
 
 try:
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
-    print("✅ Model loaded and ready!")
+    print("✅ Model weights loaded successfully!")
 except Exception as e:
-    raise RuntimeError(f"❌ Failed to load model: {e}")
+    print(f"❌ Error loading model weights: {e}")
+    raise HTTPException(status_code=500, detail="❌ Error loading model weights")
 
-# تجهيز الصورة
 preprocess = transforms.Compose([
-    transforms.Resize((192, 192)),
+    transforms.Resize((image_size, image_size)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 ])
@@ -51,28 +42,41 @@ def predict(image: Image.Image):
     input_tensor = preprocess(image).unsqueeze(0).to(device)
     with torch.no_grad():
         outputs = model(input_tensor)
-        probs = torch.nn.functional.softmax(outputs[0], dim=0)
-    pred_index = probs.argmax().item()
+        probabilities = torch.nn.functional.softmax(outputs[0], dim=0)
+    predicted_class_index = probabilities.argmax().item()
+    predicted_class_name = class_names[predicted_class_index]
+    confidence = probabilities[predicted_class_index].item() * 100
     return {
-        "class": class_names[pred_index],
-        "confidence": round(probs[pred_index].item() * 100, 2),
-        "probabilities": {class_names[i]: round(probs[i].item() * 100, 2) for i in range(len(class_names))}
+        "class": predicted_class_name,
+        "confidence": confidence,
+        "probabilities": {
+            class_names[i]: round(probabilities[i].item() * 100, 2) for i in range(len(class_names))
+        }
     }
 
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"message": "🧠 Nail Disease Classifier is running!"})
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Nail Disease Classification API! 🚀"}
 
-@app.route("/predict/", methods=["POST"])
-def classify():
-    if 'file' not in request.files:
-        return jsonify({"error": "❌ No image uploaded."}), 400
+@app.post("/predict/")
+async def classify_image(file: UploadFile = File(...)):
+    if not file:
+        raise HTTPException(status_code=400, detail="❌ No file uploaded.")
     try:
-        image = Image.open(io.BytesIO(request.files['file'].read()))
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes))
     except Exception as e:
-        return jsonify({"error": f"❌ Failed to open image: {e}"}), 400
+        raise HTTPException(status_code=400, detail=f"❌ Error opening image: {e}")
+    
     result = predict(image)
-    return jsonify(result)
+    return result
 
-if __name__ == "__main__":
-    app.run()
+
+#fast\Scripts\Activate.bat
+#uvicorn app:app --reload
+
+#ngrok config add-authtoken 2wb5ZC1wcHerJ5oUEvaBAHLpTXr_77UmRcb1Aud9FrHxzpks8
+# ngrok http 8000
+# https://a4f4-154-182-159-9.ngrok-free.app/
+
+
